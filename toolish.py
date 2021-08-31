@@ -1,5 +1,7 @@
 #想定最大プロセス数10
 
+#branch_output_dot
+
 from platform import node
 from graphviz import Graph
 from graphviz import Digraph
@@ -19,18 +21,18 @@ dg = Digraph(format = "pdf")
 f = open("result_simu.txt", "r")
 line = f.readline()
 
-while(line):
+while(line):    #ログを一行ずつ解析
     start = line.find("Starting")
     root = line.find("root")
 
-    if start != -1:
+    if start != -1:     #プロセスを開始させる時
         index = line.find("pid")
         pid = line[index:]
         start_node_list += pid
         g.node(str(node_id),pid)
         current_id_list += node_id
         node_id += 1
-    elif root != -1:
+    elif root != -1:        #アクティブなプロセスが立ち上がる時
         index_mo = re.search(r'[p][r][o][c]\s\s[0-9]', line)
         mo_start = index_mo.start()
         proc = line[mo_start:mo_start+7]
@@ -51,11 +53,9 @@ while(line):
                 current_id_list[snl_index] = node_id
                 node_id += 1
                 seq_num += 1
-            else:
-                pass    
         elif index_mo == None:
             break
-        
+
 
     line = f.readline()
 
