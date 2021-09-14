@@ -1,7 +1,3 @@
-#想定最大プロセス数10
-
-#branch_output_dot
-
 from platform import node
 from graphviz import Graph
 from graphviz import Digraph
@@ -17,8 +13,11 @@ proc_comp = None #比較用の文字列格納用変数
 g = Graph(format = "pdf")
 dg = Digraph(format = "pdf")
 
-
+fw = open("sequence.dot", "w")
 f = open("result_simu.txt", "r")
+
+fw.write("digraph sequence{\n")
+
 line = f.readline()
 
 while(line):    #ログを一行ずつ解析
@@ -37,6 +36,7 @@ while(line):    #ログを一行ずつ解析
         mo_start = index_mo.start()
         proc = line[mo_start:mo_start+7]
         start_node_list += [proc]
+        fw.write(str(node_id) + "[label = \"" + proc + "\"];\n" )
         g.node(str(node_id),proc)    #node(ID:Label)
         current_id_list += [node_id]
         node_id += 1
@@ -48,6 +48,11 @@ while(line):    #ログを一行ずつ解析
             # print(proc_comp)
             if proc_comp in start_node_list:
                 snl_index = start_node_list.index(proc_comp)
+
+                node_label = node_id -2
+                fw.write(str(node_id) + "[label = \"" + str(node_label) + "\"];\n")
+                fw.write(str(current_id_list[snl_index]) + "->" + str(node_id) + ";\n")
+
                 g.node(str(node_id), str(seq_num))
                 g.edge(str(current_id_list[snl_index]), str(node_id))
                 current_id_list[snl_index] = node_id
@@ -59,7 +64,9 @@ while(line):    #ログを一行ずつ解析
 
     line = f.readline()
 
+fw.write("}")
 f.close()
+fw.close()
 print(start_node_list)
 print(current_id_list)
 g.view()
