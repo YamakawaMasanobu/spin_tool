@@ -9,6 +9,9 @@ snl_index = 0
 node_id = 0
 seq_num = 1
 proc_comp = None #比較用の文字列格納用変数
+rootnode_xpos = 0 #ルートノードのx座標を保持する変数
+node_pos_list = []
+num_proc = 0 #生成したプロセス数を
 
 g = Graph(format = "pdf")
 dg = Digraph(format = "pdf")
@@ -36,10 +39,14 @@ while(line):    #ログを一行ずつ解析
         mo_start = index_mo.start()
         proc = line[mo_start:mo_start+7]
         start_node_list += [proc]
-        fw.write(str(node_id) + "[label = \"" + proc + "\"];\n" )
+        node_pos_list += [[rootnode_xpos, 0]]
+        fw.write(str(node_id) + "[label = \"" + proc + "\",\n" )
+        fw.write("pos = \"" + str(rootnode_xpos) + ",0!\"];\n")
         g.node(str(node_id),proc)    #node(ID:Label)
         current_id_list += [node_id]
         node_id += 1
+        rootnode_xpos += 2
+        num_proc += 1
     else:
         index_mo = re.search(r'[p][r][o][c]\s\s[0-9]', line)
         if index_mo != None:
@@ -48,9 +55,13 @@ while(line):    #ログを一行ずつ解析
             # print(proc_comp)
             if proc_comp in start_node_list:
                 snl_index = start_node_list.index(proc_comp)
-
+                x = 0
+                while x < num_proc:
+                    node_pos_list[x][1] -= 1
+                    x += 1
                 node_label = node_id -2
-                fw.write(str(node_id) + "[label = \"" + str(node_label) + "\"];\n")
+                fw.write(str(node_id) + "[label = \"" + str(node_label) + "\",\n")
+                fw.write("pos = \"" + str(node_pos_list[snl_index][0]) + "," + str(node_pos_list[snl_index][1]) + "!\"];\n")
                 fw.write(str(current_id_list[snl_index]) + "->" + str(node_id) + ";\n")
 
                 g.node(str(node_id), str(seq_num))
@@ -69,4 +80,6 @@ f.close()
 fw.close()
 print(start_node_list)
 print(current_id_list)
+print(node_pos_list)
+print(num_proc)
 g.view()
