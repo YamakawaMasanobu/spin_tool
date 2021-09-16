@@ -11,10 +11,7 @@ seq_num = 1
 proc_comp = None #比較用の文字列格納用変数
 rootnode_xpos = 0 #ルートノードのx座標を保持する変数
 node_pos_list = []
-num_proc = 0 #生成したプロセス数を
-
-g = Graph(format = "pdf")
-dg = Digraph(format = "pdf")
+num_proc = 0 #生成したプロセス数
 
 fw = open("sequence.dot", "w")
 f = open("result_simu.txt", "r")
@@ -31,7 +28,6 @@ while(line):    #ログを一行ずつ解析
         index = line.find("pid")
         pid = line[index:]
         start_node_list += pid
-        g.node(str(node_id),pid)
         current_id_list += node_id
         node_id += 1
     elif root != -1:        #アクティブなプロセスが立ち上がる時
@@ -42,7 +38,6 @@ while(line):    #ログを一行ずつ解析
         node_pos_list += [[rootnode_xpos, 0]]
         fw.write(str(node_id) + "[label = \"" + proc + "\",\n" )
         fw.write("pos = \"" + str(rootnode_xpos) + ",0!\"];\n")
-        g.node(str(node_id),proc)    #node(ID:Label)
         current_id_list += [node_id]
         node_id += 1
         rootnode_xpos += 2
@@ -63,9 +58,6 @@ while(line):    #ログを一行ずつ解析
                 fw.write(str(node_id) + "[label = \"" + str(node_label) + "\",\n")
                 fw.write("pos = \"" + str(node_pos_list[snl_index][0]) + "," + str(node_pos_list[snl_index][1]) + "!\"];\n")
                 fw.write(str(current_id_list[snl_index]) + "->" + str(node_id) + ";\n")
-
-                g.node(str(node_id), str(seq_num))
-                g.edge(str(current_id_list[snl_index]), str(node_id))
                 current_id_list[snl_index] = node_id
                 node_id += 1
                 seq_num += 1
@@ -82,4 +74,3 @@ print(start_node_list)
 print(current_id_list)
 print(node_pos_list)
 print(num_proc)
-g.view()
