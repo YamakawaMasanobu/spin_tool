@@ -15,6 +15,7 @@ node_pos_list = []
 num_proc = 0 #生成したプロセス数
 current_step = 0
 current_state_list= []
+state_list = [] 
 state_link_list = []
 state_message_list = []
 childnode_list = []
@@ -22,55 +23,108 @@ parentnode_list = []
 
 fw = open("sequence.dot", "w")
 f = open("result_simu.txt", "r")
-sm = open("statemachine.pu", "w")
+# sm = open("statemachine.pu", "w")
 
 fw.write("digraph sequence{\n")
-sm.write("@startuml\n\n")
+# sm.write("@startuml\n\n")
 
 line = f.readline()
 
-def write_statemachine(parentnode_list, state_in_list, state_out_list, num_proc,state_link_list):
+def write_statemachine(state_list, parentnode_list, childnode_list, state_link_list, num_proc):
+    sm = open("statemachine.pu", "w")
+    sm.write("@startuml\n\n")
+    state_in_list = count_in(parentnode_list, num_proc)
+    state_out_list = count_out(childnode_list, num_proc)
+    inout_1_state_list = extract_inout_1_state(state_in_list, state_out_list, num_proc)
+    searched_state_list = []
+    num_baseblock = 1
+
     i = 0
-    roop_counter = 0
-    state_num = 1
     while i < num_proc:
         j = 0
-        while j < len(parentnode_list[i]):
-            if state_in_list[i][parentnode_list[i][j]] == 1 and state_out_list[i][parentnode_list[i][j]]:
-                if roop_counter == 0:
-                    # sm.write("state state_" + str(state_num) + "{\n")
-                    # sm.write("state " + parentnode_list[i][j] + "{\n}\n")
-                    state_num += 1
-                    roop_counter += 1
+        while j < len(state_list[i]):
+            if state_list[i][j] not in searched_state_list:
+                if state_list[i][j] not in inout_1_state_list[i]:
+                    sm.write("state " + state_list[i][j] + "\n")
+                    searched_state_list.append(state_list[i][j])
                 else:
-                    # sm.write("state " + parentnode_list[i][j] + "{\n}\n")
-                    roop_counter = 0
-            else:              
-                # sm.write(state_link_list[i][j] + "\n")
+                    next_state = extract_after_arrow(parentnode_list[i], state_list[i][j], state_link_list[i])
+                    if next_state not in inout_1_state_list[i]:
+                        sm.write("state " + state_list[i][j] + "\n")
+                        searched_state_list.append(state_list[i][j])
+                    else:
+                        sm.write("state state" + str(num_baseblock) + "{\n")
+                        sm.write("state " + state_list[i][j] + "{\n}\n")
+                        searched_state_list.append(state_list[i][j])
+                        sm.write("state " + next_state + "{\n}\n")
+                        searched_state_list.append(next_state)
+                        while extract_after_arrow(parentnode_list[i], next_state, state_link_list[i]) in inout_1_state_list[i]:
+                            atn_state = extract_after_arrow(parentnode_list[i], next_state, state_link_list[i])
+                            sm.write("state " + atn_state + "{\n}\n")
+                            searched_state_list.append(atn_state)
+                            next_state = atn_state
+                        else:
+                            atn_state = extract_after_arrow(parentnode_list[i], next_state, state_link_list[i])
+                            sm.write("}\n")
+                            num_baseblock += 1
+                            sm.write("state " + atn_state + "{\n}\n")
+                            searched_state_list.append(atn_state)
+            else:
                 pass
             j += 1
         i += 1
-    # i = 0
-# while i < num_proc:
-#     j = 0
-#     while j < len(state_link_list[i]):
-#         print(num_in_out[0][str(state_link_list[i][j])])
-#         j+=1
-#         # if num_in_out[0][str(state_link_list[i][j])]:
 
-#     i += 1
-
-def count_in_out (childnode_list, num_proc, parentnode_list, state_link_list):
     i = 0
-    state_out_list = []
+    while i < num_proc:
+        j = 0
+        while j < len(state_link_list[i]):
+            sm.write("\n" + state_link_list[i][j] + "\n")
+            j +=1
+        i += 1
+    
+
+    sm.write("@enduml")
+    sm.close
+    
+def extract_after_arrow(parentnode_list, state_name, link_list):
+    target = "-->"
+    index = parentnode_list.index(state_name)
+    a = link_list[index].find(target)
+    r = link_list[index][a + len(target):]
+    return r
+
+def extract_inout_1_state(state_in_list, state_out_list, num_proc):
+    inout_1_state_list = []
+    i = 0
+    while i < num_proc:
+        j = 0
+        temp_list = []
+        while j < len(state_list[i]):
+            if state_in_list[i][state_list[i][j]] == 1 and state_out_list[i][state_list[i][j]] == 1:
+                temp_list.append(state_list[i][j])
+            j += 1
+        inout_1_state_list.append(temp_list)
+        i += 1
+    return inout_1_state_list
+
+def count_in(parentnode_list, num_proc):
+    i = 0
     state_in_list = []
     while i < num_proc:
-        state_out_list += [collections.Counter(childnode_list[i])]
         state_in_list += [collections.Counter(parentnode_list[i])]
         i += 1
-    # print(state_in_list[0][parentnode_list[0][2]])
-    write_statemachine(parentnode_list, state_in_list, state_out_list, num_proc, state_link_list)
-    # return [state_in_list, state_out_list]
+    return state_in_list
+
+def count_out(childnode_list, num_proc):
+    i = 0
+    state_out_list = []
+    while i < num_proc:
+        state_out_list += [collections.Counter(childnode_list[i])]
+        i += 1
+    return state_out_list
+
+
+
 
 
 while(line):    #ログを一行ずつ解析
@@ -98,6 +152,7 @@ while(line):    #ログを一行ずつ解析
         parentnode_list += [[]]
         state_link_list += [[]]
         state_message_list += [[]]
+        state_list += [[]]
         fw.write(str(node_id) + "[label = \"" + proc + "\",\n" )
         fw.write("pos = \"" + str(rootnode_xpos) + ",0!\"];\n")
         current_id_list += [node_id]
@@ -142,10 +197,12 @@ while(line):    #ログを一行ずつ解析
             smo_end = state_mo.end()
             state = line[smo_start:smo_end] + "_" + str(snl_index)
             nonspace_state = state.replace(" ", "")
+            if nonspace_state not in state_list[snl_index]:
+                state_list[snl_index].append(nonspace_state)
             state_link = current_state_list[snl_index] + "-->" + nonspace_state
             if state_link not in state_link_list[snl_index]:
-                sm.write(state_link + "\n")
-                sm.write(nonspace_state + ":" + edge_label + "\n")
+                # sm.write(state_link + "\n")
+                # sm.write(nonspace_state + ":" + edge_label + "\n")
                 state_message = nonspace_state + ":" + edge_label + "\n"
                 state_link_list[snl_index] += [state_link]
                 state_message_list[snl_index] += [state_message]
@@ -161,32 +218,23 @@ while(line):    #ログを一行ずつ解析
 
 
     line = f.readline()
-num_in_out = count_in_out(childnode_list, num_proc, parentnode_list, state_link_list)
-# i = 0
-# while i < num_proc:
-#     j = 0
-#     while j < len(state_link_list[i]):
-#         print(num_in_out[0][str(state_link_list[i][j])])
-#         j+=1
-#         # if num_in_out[0][str(state_link_list[i][j])]:
-
-#     i += 1
-
-
-
+write_statemachine(state_list, parentnode_list, childnode_list, state_link_list, num_proc)
 
 
 fw.write("}")
-sm.write("@enduml")
+# sm.write("@enduml")
 f.close()
 fw.close()
-sm.close
+# sm.close
+
+
 # print(start_node_list)
 # print(current_id_list)
 # print(node_pos_list)
-print(state_link_list)
-print("\n\n\n")
-print(state_message_list)
+# print(state_list)
+# print(state_link_list)
+# print("\n\n\n")
+# print(state_message_list)
 # print(num_proc)
 # print("\n\n\n")
 # print(childnode_list)
