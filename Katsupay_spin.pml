@@ -92,8 +92,8 @@ active proctype Screen(){
             if
             ::  Screen_ch?press_bfail_return_btn ->
                 if
-                ::  PayType == paytype_payment -> s_Item
-                ::  PayType == paytype_charge -> s_charge
+                ::  PayType == paytype_payment -> Screen_state = s_Item
+                ::  PayType == paytype_charge -> Screen_state = s_charge
                 fi 
             ::  Screen_ch?press_bfail_charge_btn ->
                 Screen_state = s_charge
