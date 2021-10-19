@@ -19,7 +19,8 @@ state_list = []
 state_link_list = []
 state_message_list = []
 childnode_list = []
-parentnode_list = [] 
+parentnode_list = []
+state_step_dict = {}
 
 fw = open("sequence.dot", "w")
 f = open("result_simu.txt", "r")
@@ -27,7 +28,7 @@ fw.write("digraph sequence{\n")
 
 line = f.readline()
 
-def write_statemachine(state_list, parentnode_list, childnode_list, state_link_list, num_proc, state_message_list):
+def write_statemachine(state_list, parentnode_list, childnode_list, state_link_list, num_proc, state_message_list, state_step_dict):
     sm = open("statemachine.pu", "w")
     sm.write("@startuml statemachine\n\n")
     state_in_list = count_in(parentnode_list, num_proc)
@@ -42,9 +43,6 @@ def write_statemachine(state_list, parentnode_list, childnode_list, state_link_l
         j = 0
         while j < len(state_list[i]):
             if state_list[i][j] not in searched_state_list:
-                # print(state_list[i][j])
-                # print(searched_state_list)
-                # print("\n")
                 if state_list[i][j] not in inout_1_state_list[i]:
                     msg_index = extract_index(state_message_list[i], state_list[i][j])
                     sm.write("state " + state_list[i][j] + "{\nstate " + state_message_list[i][msg_index] + "}\n")
@@ -81,6 +79,19 @@ def write_statemachine(state_list, parentnode_list, childnode_list, state_link_l
                 pass
             j += 1
         i += 1
+
+    i = 0
+    while i < num_proc:
+        j = 0
+        while j < len(state_list[i]):
+            # sm.write("note right of " + state_list[i][j] + "\n")
+            key = state_list[i][j]
+            # print(type(key))
+            sm.write(state_list[i][j] + ":step " + str(state_step_dict[key])+ "\n")
+            # sm.write("end note\n")
+            j += 1
+        i += 1
+
 
     i = 0
     while i < num_proc:
@@ -208,12 +219,11 @@ while(line):    #ログを一行ずつ解析
             smo_end = state_mo.end()
             state = line[smo_start:smo_end] + "_" + str(snl_index)
             nonspace_state = state.replace(" ", "")
+            state_step_dict.setdefault(nonspace_state, []).append(step_num.group())
             if nonspace_state not in state_list[snl_index]:
                 state_list[snl_index].append(nonspace_state)
             state_link = current_state_list[snl_index] + "-->" + nonspace_state
             if state_link not in state_link_list[snl_index]:
-                # sm.write(state_link + "\n")
-                # sm.write(nonspace_state + ":" + edge_label + "\n")
                 state_message = nonspace_state + ":" + edge_label + "\n"
                 state_link_list[snl_index] += [state_link]
                 state_message_list[snl_index] += [state_message]
@@ -229,19 +239,19 @@ while(line):    #ログを一行ずつ解析
 
 
     line = f.readline()
-write_statemachine(state_list, parentnode_list, childnode_list, state_link_list, num_proc, state_message_list)
+write_statemachine(state_list, parentnode_list, childnode_list, state_link_list, num_proc, state_message_list, state_step_dict)
 
 
 fw.write("}")
 f.close()
 fw.close()
 
-
+# print(state_step_dict)
 # print(start_node_list)
 # print(current_id_list)
 # print(node_pos_list)
 # print("\n\n\n")
-# print(state_list)
+print(state_list)
 # print(state_link_list)
 # print("\n\n\n")
 # print(state_message_list)
