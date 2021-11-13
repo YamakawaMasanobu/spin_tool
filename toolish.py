@@ -182,28 +182,34 @@ while(line):    #ログを一行ずつ解析
         fw.write("pos = \"" + str(rootnode_xpos) + ",0!\"];\n")
         current_id_list += [node_id]
         node_id += 1
-        rootnode_xpos += 2
+        rootnode_xpos += 3
         num_proc += 1
         current_step = step_num.group()
     else:
         step_num = re.match(r"\s*[0-9]+", line)
         index_mo = re.search(r'[p][r][o][c]\s+[0-9]', line)
         state_mo = re.search(r'[s][t][a][t][e]\s[0-9]+', line)
+
         if index_mo != None:
             #以下シーケンス図に関する記述
             mo_start = index_mo.start()
             mo_end = index_mo.end()
             proc_comp = line[mo_start:mo_end]
+            smo_start = state_mo.start()  #状態遷移をリスト化
+            smo_end = state_mo.end()
+
             if proc_comp in start_node_list:
                 snl_index = start_node_list.index(proc_comp)
+                state = line[smo_start:smo_end] + "_" + str(snl_index)
+                nonspace_state = state.replace(" ", "")
                 if current_step != step_num.group():
                     x = 0
                     while x < num_proc:
-                        node_pos_list[x][1] -= 1
+                        node_pos_list[x][1] -= 1.5
                         x += 1
                 else:
                     pass
-                fw.write(str(node_id) + "[label = \"" + str(step_num.group()) + "\",\n")
+                fw.write(str(node_id) + "[label = \"" + str(step_num.group()) + "\n" + nonspace_state + "\",\n")
                 fw.write("pos = \"" + str(node_pos_list[snl_index][0]) + "," + str(node_pos_list[snl_index][1]) + "!\"];\n")
                 fw.write(str(current_id_list[snl_index]) + "->" + str(node_id) + "\n")
                 edge_label_mo = re.search(r"[\[].*[\]]",line)
@@ -215,10 +221,10 @@ while(line):    #ログを一行ずつ解析
                 current_step = step_num.group()
 
             #以下状態線図に関する記述    
-            smo_start = state_mo.start()  #状態遷移をリスト化
-            smo_end = state_mo.end()
-            state = line[smo_start:smo_end] + "_" + str(snl_index)
-            nonspace_state = state.replace(" ", "")
+            # smo_start = state_mo.start()  #状態遷移をリスト化
+            # smo_end = state_mo.end()
+            # state = line[smo_start:smo_end] + "_" + str(snl_index)
+            # nonspace_state = state.replace(" ", "")
             state_step_dict.setdefault(nonspace_state, []).append(step_num.group())
             if nonspace_state not in state_list[snl_index]:
                 state_list[snl_index].append(nonspace_state)
@@ -251,8 +257,8 @@ fw.close()
 # print(current_id_list)
 # print(node_pos_list)
 # print("\n\n\n")
-print(state_list)
-# print(state_link_list)
+# print(state_list)
+print(state_link_list)
 # print("\n\n\n")
 # print(state_message_list)
 # print(num_proc)
