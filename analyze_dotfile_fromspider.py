@@ -1,7 +1,6 @@
 #SPINSPIDERから出力されたdotファイルから状態に関する情報を抽出
 
 import re
-import collections
 state_info_list = [] #状態の情報を格納するlistのlist
 edge_list=[]    #状態の接続関係を格納するstrのlist
 
@@ -15,7 +14,7 @@ while(line):
     if def_node_mo != None:
         state_info_mo = re.search("(\".*\")",line)
         state_info = state_info_mo.group().replace("\"", "")
-        state_info_list.append( state_info.split("\\n"))
+        state_info_list.append(state_info.split("\\n"))
     elif def_edge_mo != None:
         edge_list.append(def_edge_mo.group())
     else:
