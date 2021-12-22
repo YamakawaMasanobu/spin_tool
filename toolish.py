@@ -151,13 +151,18 @@ def count_out(childnode_list, num_proc):
 
 
 
-
+endflag = True
 while(line):    #ログを一行ずつ解析
     start = line.find("Starting")
     root = line.find("root")
+    log = re.search(r"(\s*)([0-9]+):(\s*)(proc)(\s+)([0-9]+)(\s*)(\(.*\))(.*).pml(.*)", line)
+    endpoint_mo = re.search(r"(\s)*(#processes)(.*)", line)
 
+
+    if endpoint_mo != None:
+        break
     
-    if start != -1:     #プロセスを開始させる時
+    elif start != -1:     #プロセスを開始させる時
         step_num = re.match(r"\s*[0-9]+", line)
         index = line.find("pid")
         pid = line[index:]
@@ -185,7 +190,7 @@ while(line):    #ログを一行ずつ解析
         rootnode_xpos += 3
         num_proc += 1
         current_step = step_num.group()
-    else:
+    elif log != None:
         step_num = re.match(r"\s*[0-9]+", line)
         index_mo = re.search(r'[p][r][o][c]\s+[0-9]', line)
         state_mo = re.search(r'[s][t][a][t][e]\s[0-9]+', line)
@@ -212,7 +217,7 @@ while(line):    #ログを一行ずつ解析
                 fw.write(str(node_id) + "[label = \"" + str(step_num.group()) + "\n" + nonspace_state + "\",\n")
                 fw.write("pos = \"" + str(node_pos_list[snl_index][0]) + "," + str(node_pos_list[snl_index][1]) + "!\"];\n")
                 fw.write(str(current_id_list[snl_index]) + "->" + str(node_id) + "\n")
-                edge_label_mo = re.search(r"[\[].*[\]]",line)
+                edge_label_mo = re.search(r"(\[)(.*)(\])",line)
                 edge_label = edge_label_mo.group()
                 fw.write("[label = \"" + edge_label + "\"]\n")
                 current_id_list[snl_index] = node_id
@@ -242,6 +247,8 @@ while(line):    #ログを一行ずつ解析
             
         elif index_mo == None:
             break
+    else:
+        pass
 
 
     line = f.readline()
