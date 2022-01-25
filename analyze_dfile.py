@@ -20,8 +20,8 @@ while(line):
         proc_dict_forchk[proc_num] = {}
         proc_dict_forers[process_name] = {}
     elif state_mo != None:
-        source_mo = re.search(r"(\s*)(state)(\s+)([1-9]+)(\s-\(tr)(.*)", line) #source state
-        l_lc_mo = re.search(r"(.pml:)([0-9]+)\s(=>)\s(.*)", line) #ロケーションカウンターとその行番号を抽出
+        source_mo = re.search(r"(\s*)(state)(\s+)([0-9][0-9]*)(\s-\(tr)(.*)", line) #source state
+        l_lc_mo = re.search(r"(.pml:)([0-9][0-9]*)\s(=>)\s(.*)", line) #ロケーションカウンターとその行番号を抽出
         if source_mo.group(4) not in proc_dict_forchk[proc_num]:
             proc_dict_forchk[proc_num][source_mo.group(4)] = {} 
         else:
